@@ -18,10 +18,11 @@
   },
   "dependencies": {
     "@types/jquery": "^2.0.34",
-    "@types/q": "0.0.32",
     "@types/node": "*",
-    "vsts-task-sdk": "*",
-    "vsts-task-lib": "*"
+    "@types/q": "0.0.32",
+    "vss-web-extension-sdk": "^5.134.0",
+    "vsts-task-lib": "*",
+    "vsts-task-sdk": "*"
   },
   "name": "",
   "private": true,
