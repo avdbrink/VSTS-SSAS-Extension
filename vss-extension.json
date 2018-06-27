@@ -1,0 +1,91 @@
+{
+    "manifestVersion": 1,
+    "id": "VSTS-SSAS",
+    "version": "0.3.4",
+    "name": "SSAS Deploy",
+    "scopes": [ "vso.work", "vso.work_write" ],
+    "description": "Extension with Continuous Integration support for SSAS",
+    "baseUri": "https://github.com/avdbrink",
+    "publisher": "avdbrink",
+    "public": false,
+    "icons": {
+        "default": "images/logo.png"
+    },
+    "targets": [
+        {
+            "id": "Microsoft.VisualStudio.Services"
+        }
+    ],
+    "categories": [
+        "Build and release"
+    ],
+    "tags": [
+        "SQL",
+        "SSAS",
+        "Analysis Services",
+        "Tabular",
+        "Denenv"
+    ],
+    "screenshots": [
+        {
+            "path": "docs/Screenshots/DeploySSAS-Task.png"
+        }
+    ],
+    "links": {
+        "home": {
+            "uri": "https://github.com/avdbrink"
+        },
+        "getstarted": {
+            "uri": "https://github.com/avdbrink"
+        }
+    },
+    "repository": {
+        "type": "git",
+        "uri": "https://github.com/avdbrink"
+    },
+    "branding": {
+        "color": "#f6f7fb",
+        "theme": "light"
+    },
+    "content": {
+        "details": {
+            "path": "README.md"
+        }
+    },
+    "files": [
+        {
+            "path": "DeploySSASTask"
+        },
+        {
+            "path": "BuildSSASTask"
+        },
+        {
+            "path": "node_modules/vss-web-extension-sdk/lib",
+            "addressable": true,
+            "packagePath": "lib"
+        }
+
+    ],
+    "contributions": [
+        {
+            "id": "DeploySSAS-task",
+            "targets": [
+                "ms.vss-distributed-task.tasks"
+            ],
+            "type": "ms.vss-distributed-task.task",
+            "properties": {
+                "name": "DeploySSASTask"
+            }
+        },
+        {
+            "id": "BuildSSAS-task",
+            "targets": [
+                "ms.vss-distributed-task.tasks"
+            ],
+            "type": "ms.vss-distributed-task.task",
+            "properties": {
+                "name": "BuildSSASTask"
+            }
+        }
+    ]
+}

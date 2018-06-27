@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension=".png" ContentType="image/png"/>
+  <Default Extension=".md" ContentType="text/markdown"/>
+  <Default Extension=".ps1" ContentType="text/ps1"/>
+  <Default Extension=".json" ContentType="application/json"/>
+  <Default Extension=".svg" ContentType="image/svg+xml"/>
+  <Default Extension=".config" ContentType="application/xml"/>
+  <Default Extension=".exe" ContentType="application/x-msdownload"/>
+  <Default Extension=".dll" ContentType="application/x-msdownload"/>
+  <Default Extension=".psd1" ContentType="application/octet-stream"/>
+  <Default Extension=".psm1" ContentType="application/octet-stream"/>
+  <Default Extension=".vsixmanifest" ContentType="text/xml"/>
+  <Default Extension=".vsomanifest" ContentType="application/json"/>
+</Types>
