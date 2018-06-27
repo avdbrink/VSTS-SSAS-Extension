@@ -2,7 +2,7 @@
   "id": "6FC422C6-F77E-4EBE-B124-D008BA47F4D0",
   "name": "BuildSsas",
   "friendlyName": "SSAS Build",
-  "description": "Build SQL Server Analysis Services Project into .asdatabase file using devenv.exe",
+  "description": "Build SQL Server Analysis Services Project (Multi dimensional only) into .asdatabase file using devenv.com",
   "helpMarkDown": "",
   "category": "Build",
   "visibility": [
@@ -17,11 +17,17 @@
   "version": {
     "Major": 0,
     "Minor": 3,
-    "Patch": 4
+    "Patch": 6
   },
   "demands": [ ],
   "minimumAgentVersion": "1.95.0",
-  "groups": [ ],
+  "groups": [
+    {
+      "name": "advanced",
+      "displayname": "Advanced",
+      "isExpanded":  false  
+    }
+  ],
   "inputs": [
     {
       "name": "projPath",
@@ -58,6 +64,15 @@
       "defaultValue": "$(BuildPlatform)",
       "required": true,
       "helpMarkDown": "The name of the project platform that will be used to build the project named in project File. Default value is $(BuildPlatform)."
+    },
+    {
+      "name": "devenvPath",
+      "type": "string",
+      "label": "Location of devenv.com",
+      "defaultValue": "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\Common7\\IDE\\devenv.com",
+      "required": true,
+      "groupname": "advanced",
+      "helpMarkDown": "Location of devenv.com. Usually somewhere inside the visual studio folder. NB: For now the VS17 agent does not seem to contain devenv.com"
     }
 
   ],

@@ -47,8 +47,18 @@ try {
 	}
 	if (!(Test-Path($compiler))) {
 		Write-Host "##vso[task.logissue type=error;]Cannot access compiler. Selected version: $mgmtVersion"
-	}
-	Write-Host ("Deployment executable version: $compiler")
+	} else {
+    	Write-Host ("Deployment executable version: $compiler")
+    }
+
+    if (Get-Module -ListAvailable -Name SqlServer) {
+       if (-not (Get-Module -Name "SqlServer")) {
+            # if module is not loaded
+            Import-Module "SqlServer" -DisableNameChecking
+        }
+    } else {
+        Write-Host "##vso[task.logissue type=error;]SqlServer Powershell module not installed"
+    }
 
 	if([System.Convert]::ToBoolean($ConfigurationSettingsDeployment)) {		
 		$ConfigurationSettingsDeployment = "Retain"
