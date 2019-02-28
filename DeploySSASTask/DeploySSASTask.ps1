@@ -25,6 +25,10 @@ try {
 	$OptimizationSettingsDeployment = Get-VstsInput -Name OptimizationSettingsDeployment -Require
 	$WriteBackTableCreation = Get-VstsInput -Name WriteBackTableCreation -Require
 	$mgmtVersion = Get-VstsInput -Name mgmtVersion -Require
+	$ImpersonationInformation = Get-VstsInput -Name ImpersonationInformation -Require
+	$ServiceAccountName = Get-VstsInput -Name ServiceAccountName
+	$ServiceAccountPassword = Get-VstsInput -Name ServiceAccountPassword
+	
 	
 	if (!(Test-Path $AsDBFilePath)) {
 		Write-Error (Get-VstsLocString -Key AsDBFile0AccessDenied -ArgumentList $AsDBFilePath)
@@ -128,6 +132,68 @@ try {
 		$xml.return.root.Messages.Error | % { Write-Host ($_.ErrorCode + ": " + $_.Description) }
 		Write-Error (Get-VstsLocString -key ErrorDuringDeployment)
 	}
+	else {
+		# No errors so far
+		# Start updating impersonation information
+		[System.Reflection.Assembly]::LoadWithPartialName("Microsoft.AnalysisServices") >$NULL
+		$server = New-Object Microsoft.AnalysisServices.Server
+		$server.connect("$($ServerName)")
+		$Database = $server.Databases.item("$($DatabaseName)")
+		switch ($ImpersonationInformation) {
+			"UseASpecificWindowsUser" { 
+				$NewImpersonationMode = "ImpersonateAccount"
+				break 
+			}
+			"UseTheCredentialsOfTheCurrentUser" { 
+				$NewImpersonationMode = "ImpersonateCurrentUser"
+				break 
+			}
+			"Inherit" { 
+				$NewImpersonationMode = "Default"
+				break 
+			}
+			default {  # Default to "UseTheServiceAccount"
+				$NewImpersonationMode = "ImpersonateServiceAccount"
+				break 
+			}
+		}
+
+		# object structure for multidimensionals is slightly different from tabulars
+		# Datasource of a multidimensional has an ImpersonationInfo object, where tabulars 
+		# can have the impoersonation info written directly to the datasource object
+		if ($server.ServerMode -eq "Multidimensional") {
+
+			$ds = $Database.DataSources
+			foreach($_ in $ds)	{ 
+				Write-Host("Changing impersonation info from " + $_.ImpersonationInfo.ImpersonationMode + " to " + $NewImpersonationMode + " on datasource " + $_.Name)
+				$_.ImpersonationInfo.ImpersonationMode = $NewImpersonationMode
+				if ($NewImpersonationMode -eq "ImpersonateAccount") {
+					$_.ImpersonationInfo.Account = $ServiceAccountName
+					$_.ImpersonationInfo.Password = $ServiceAccountPassword
+				}
+			}
+			$ds.update()
+			write-host "Impersonation information is changed on the Multidimensional Server"
+		}
+		else {
+		  
+			$ds = New-Object Microsoft.AnalysisServices.Tabular.ProviderDataSource
+			$ds = $Database.model
+
+			foreach($_ in $ds.Model.DataSources) {
+				Write-Host("Changing impersonation info from " + $_.ImpersonationMode + " to " + $NewImpersonationMode + " on datasource " + $_.Name)
+				$_.ImpersonationMode = $NewImpersonationMode
+				if ($NewImpersonationMode -eq "ImpersonateAccount") {
+					$_.Account = $ServiceAccountName
+					$_.Password = $ServiceAccountPassword
+				}
+			}
+			$ds.Model.SaveChanges()
+			write-host "Impersonation information is changed on the Tabular server"
+
+		}
+	}
+
 
 
 } catch {
