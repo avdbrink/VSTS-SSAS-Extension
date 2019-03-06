@@ -15,9 +15,9 @@
     ],
     "author": "avbrink",
     "version": {
-        "Major": 0,
-        "Minor": 4,
-        "Patch": 7
+        "Major": 1,
+        "Minor": 0,
+        "Patch": 0
     },
     "demands": [],
     "minimumAgentVersion": "1.95.0",
@@ -151,11 +151,16 @@
         },
 		{
 			"name": "WriteBackTableCreation",
-			"type": "string",
-			"label": "Write back table creation",
+			"type": "pickList",
+			"label": "Writeback Table Options",
 			"defaultValue": "UseExisting",
 			"required": true,
-			"helpMarkDown": "",
+			"options": {
+			  "Create": "Create",
+			  "CreateAlways": "Create always",
+			  "UseExisting": "Use existing"
+			},
+			"helpMarkDown": "Create: Create a new writeback table, if one does not exist. If a writeback table already exists, an error occurs.\nCreateAlways: Create a new writeback table, overwriting any existing writeback table.\nUse Existing: Use the existing writeback table, if one already exists. If one does not exist, an error occurs.\n",
 			"groupName": "options"
 		},    
 		{

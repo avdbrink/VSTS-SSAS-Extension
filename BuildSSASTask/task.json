@@ -15,9 +15,9 @@
   ],
   "author": "Arno van den Brink",
   "version": {
-    "Major": 0,
-    "Minor": 4,
-    "Patch": 7
+    "Major": 1,
+    "Minor": 0,
+    "Patch": 0
   },
   "demands": [ ],
   "minimumAgentVersion": "1.95.0",
@@ -35,7 +35,7 @@
       "label": "Path to Project File",
       "defaultValue": "",
       "required": true,
-      "helpMarkDown": "Path to *.smproj file"
+      "helpMarkDown": "Path to *.dwproj file"
     },
     {
       "name": "projCmdSwitch",
@@ -55,7 +55,7 @@
       "label": "Project Configuration Name",
       "defaultValue": "$(BuildConfiguration)",
       "required": true,
-      "helpMarkDown": "Optional. The name of a Project build configuration to be used that will be used to build the project named in Project File. Default value is $(BuildConfiguration). See: https://msdn.microsoft.com/en-us/library/abtk353z.aspx"
+      "helpMarkDown": "Optional. The name of a Project build configuration that will be used to build the project named in Project File. Default value is $(BuildConfiguration). See: https://msdn.microsoft.com/en-us/library/abtk353z.aspx"
     },
     {
       "name": "projPlatformName",
