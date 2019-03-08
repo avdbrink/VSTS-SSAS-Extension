@@ -5,6 +5,34 @@
 param()
 Trace-VstsEnteringInvocation $MyInvocation
 
+# Test-XMLFile function by Jonathan Medd
+# https://www.jonathanmedd.net/2012/05/quick-and-easy-powershell-test-xmlfile.html
+function Test-XMLFile {
+	<#
+	.SYNOPSIS
+	Test the validity of an XML file
+	#>
+	[CmdletBinding()]
+	param (
+		[parameter(mandatory=$true)][ValidateNotNullorEmpty()][string]$xmlFilePath
+	)
+
+	# Check the file exists
+	if (!(Test-Path -Path $xmlFilePath)){
+		throw "$xmlFilePath is not valid. Please provide a valid path to the .xml fileh"
+	}
+	# Check for Load or Parse errors when loading the XML file
+	$xml = New-Object System.Xml.XmlDocument
+	try {
+		$xml.Load((Get-ChildItem -Path $xmlFilePath).FullName)
+		return $true
+	}
+	catch [System.Xml.XmlException] {
+		Write-Verbose "$xmlFilePath : $($_.toString())"
+		return $false
+	}
+}
+
 try {
     # Import the localized strings.
     Import-VstsLocStrings "$PSScriptRoot\Task.json"
@@ -85,7 +113,7 @@ try {
 
 	[System.Reflection.Assembly]::LoadWithPartialName("Microsoft.AnalysisServices") | Out-Null;
 	$server = New-Object Microsoft.AnalysisServices.Server
-	$server.connect($ServerName)
+	$server.connect("$ServerName")
 	if ($server.Connected -eq $false) {
 		Write-Error (Get-VstsLocString -Key Server0AccessDenied -ArgumentList $ServerName)
 		Exit 1
@@ -117,6 +145,100 @@ try {
 	$xml.Save($DeploymentOptions)
 	# End Edit DeploymentOptions file
 
+	# Edit impersonation settings
+	switch ($ImpersonationInformation) {
+		"UseASpecificWindowsUser" { 
+			$NewImpersonationMode = "ImpersonateAccount"
+			break 
+		}
+		"UseTheCredentialsOfTheCurrentUser" { 
+			$NewImpersonationMode = "ImpersonateCurrentUser"
+			break 
+		}
+		"Inherit" { 
+			$NewImpersonationMode = "Default"
+			break 
+		}
+		default {  # Default to "UseTheServiceAccount"
+			$NewImpersonationMode = "ImpersonateServiceAccount"
+			break 
+		}
+	}
+	# object structure for multidimensionals is slightly different from tabulars
+	# Datasource of a multidimensional has an ImpersonationInfo object, where tabulars 
+	# can have the impoersonation info written directly to the datasource object
+	if ($server.ServerMode -eq "Multidimensional") {
+
+		# First we find out if it's XML or JSON (SQL Compatability <= 1000 == XML; Compatability >= 1200 == JSON)
+		if ((Test-XMLFile "$AsDBFilePath") -eq "True") {
+			$xml = [xml](Get-Content $AsDBFilePath)
+			$datasources = $xml.Database.DataSources
+			foreach ($datasource in $datasources.ChildNodes) {
+				Write-Host("[XML] Changing impersonation info from " + $datasource.ImpersonationInfo.ImpersonationMode + " to " + $NewImpersonationMode + " on datasource " + $datasource.Name)
+				$datasource.ImpersonationInfo.ImpersonationMode = $NewImpersonationMode
+				if ($NewImpersonationMode -eq "ImpersonateAccount") {
+					$datasource.ImpersonationInfo.Account = $ServiceAccountName
+					$datasource.ImpersonationInfo.Password = $ServiceAccountPassword
+				}
+			}
+			$xml.Save($AsDBFilePath)
+		} else {
+			# Assume it's JSON if Test-XMLFile returned false
+			$model = [IO.File]::ReadAllText($AsDBFilePath)
+			$db = [Microsoft.AnalysisServices.Tabular.JsonSerializer]::DeserializeDatabase($model)
+			foreach ($datasource in $db.Model.Model.DataSources) {
+				Write-Host("[JSON] Changing impersonation info from " + $datasource.ImpersonationInfo.ImpersonationMode + " to " + $NewImpersonationMode + " on datasource " + $datasource.Name)
+				$datasource.ImpersonationInfo.ImpersonationMode = $NewImpersonationMode
+				if ($NewImpersonationMode -eq "ImpersonateAccount") {
+					$datasource.ImpersonationInfo.Account = $ServiceAccountName
+					$datasource.ImpersonationInfo.Password = $ServiceAccountPassword
+				} else {
+					$datasource.ImpersonationInfo.Account = ""
+					$datasource.ImpersonationInfo.Password = ""
+				}
+			}
+			[Microsoft.AnalysisServices.Tabular.JsonSerializer]::SerializeDatabase($db) | Set-Content $AsDBFilePath
+		}
+		write-host "Impersonation information is changed on the Multidimensional Server"
+	}
+	else {
+	  
+		# First we find out if it's XML or JSON (SQL Compatability <= 1000 == XML; Compatability >= 1200 == JSON)
+		if ((Test-XMLFile "$AsDBFilePath") -eq "True") {
+			$xml = [xml](Get-Content $AsDBFilePath)
+			$datasources = $xml.Database.DataSources
+			foreach ($datasource in $datasources.ChildNodes) {
+				Write-Host("[XML] Changing impersonation info from " + $datasource.ImpersonationMode + " to " + $NewImpersonationMode + " on datasource " + $datasource.Name)
+				$datasource.ImpersonationMode = $NewImpersonationMode
+				if ($NewImpersonationMode -eq "ImpersonateAccount") {
+					$datasource.Account = $ServiceAccountName
+					$datasource.Password = $ServiceAccountPassword
+				}
+			}
+			$xml.Save($AsDBFilePath)
+		} else {
+			# Assume it's JSON if Test-XMLFile returned false
+			$model = [IO.File]::ReadAllText($AsDBFilePath)
+			$db = [Microsoft.AnalysisServices.Tabular.JsonSerializer]::DeserializeDatabase($model)
+			foreach ($datasource in $db.Model.Model.DataSources) {
+				Write-Host("[JSON] Changing impersonation info from " + $datasource.ImpersonationMode + " to " + $NewImpersonationMode + " on datasource " + $datasource.Name)
+				$datasource.ImpersonationMode = $NewImpersonationMode
+				if ($NewImpersonationMode -eq "ImpersonateAccount") {
+					$datasource.Account = $ServiceAccountName
+					$datasource.Password = $ServiceAccountPassword
+				} else {
+					$datasource.Account = ""
+					$datasource.Password = ""
+				}
+			}
+			[Microsoft.AnalysisServices.Tabular.JsonSerializer]::SerializeDatabase($db) | Set-Content $AsDBFilePath
+		}
+		write-host "Impersonation information is changed on the Tabular server"
+
+	}
+	# End Edit impersonation settings
+	
+	
 	Write-Host (Get-VstsLocString -Key CreatingXmlFromAsDatabase )
 	& $compiler $AsDBFilePath /s:$path\ScriptLog.txt /o:$path\$modelName.xmla
 	
@@ -132,69 +254,6 @@ try {
 		$xml.return.root.Messages.Error | % { Write-Host ($_.ErrorCode + ": " + $_.Description) }
 		Write-Error (Get-VstsLocString -key ErrorDuringDeployment)
 	}
-	else {
-		# No errors so far
-		# Start updating impersonation information
-		[System.Reflection.Assembly]::LoadWithPartialName("Microsoft.AnalysisServices") >$NULL
-		$server = New-Object Microsoft.AnalysisServices.Server
-		$server.connect("$($ServerName)")
-		$Database = $server.Databases.item("$($DatabaseName)")
-		switch ($ImpersonationInformation) {
-			"UseASpecificWindowsUser" { 
-				$NewImpersonationMode = "ImpersonateAccount"
-				break 
-			}
-			"UseTheCredentialsOfTheCurrentUser" { 
-				$NewImpersonationMode = "ImpersonateCurrentUser"
-				break 
-			}
-			"Inherit" { 
-				$NewImpersonationMode = "Default"
-				break 
-			}
-			default {  # Default to "UseTheServiceAccount"
-				$NewImpersonationMode = "ImpersonateServiceAccount"
-				break 
-			}
-		}
-
-		# object structure for multidimensionals is slightly different from tabulars
-		# Datasource of a multidimensional has an ImpersonationInfo object, where tabulars 
-		# can have the impoersonation info written directly to the datasource object
-		if ($server.ServerMode -eq "Multidimensional") {
-
-			$ds = $Database.DataSources
-			foreach($_ in $ds)	{ 
-				Write-Host("Changing impersonation info from " + $_.ImpersonationInfo.ImpersonationMode + " to " + $NewImpersonationMode + " on datasource " + $_.Name)
-				$_.ImpersonationInfo.ImpersonationMode = $NewImpersonationMode
-				if ($NewImpersonationMode -eq "ImpersonateAccount") {
-					$_.ImpersonationInfo.Account = $ServiceAccountName
-					$_.ImpersonationInfo.Password = $ServiceAccountPassword
-				}
-			}
-			$ds.update()
-			write-host "Impersonation information is changed on the Multidimensional Server"
-		}
-		else {
-		  
-			$ds = New-Object Microsoft.AnalysisServices.Tabular.ProviderDataSource
-			$ds = $Database.model
-
-			foreach($_ in $ds.Model.DataSources) {
-				Write-Host("Changing impersonation info from " + $_.ImpersonationMode + " to " + $NewImpersonationMode + " on datasource " + $_.Name)
-				$_.ImpersonationMode = $NewImpersonationMode
-				if ($NewImpersonationMode -eq "ImpersonateAccount") {
-					$_.Account = $ServiceAccountName
-					$_.Password = $ServiceAccountPassword
-				}
-			}
-			$ds.Model.SaveChanges()
-			write-host "Impersonation information is changed on the Tabular server"
-
-		}
-	}
-
-
 
 } catch {
     Write-Error (Get-VstsLocString -Key InternalError0 -ArgumentList $_.Exception.Message)

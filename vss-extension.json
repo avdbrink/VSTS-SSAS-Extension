@@ -1,7 +1,7 @@
 {
     "manifestVersion": 1,
     "id": "VSTS-SSAS",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "name": "SSAS Build & Deploy",
     "scopes": [ "vso.work", "vso.work_write" ],
     "description": "Extension with Continuous Integration support for SSAS",

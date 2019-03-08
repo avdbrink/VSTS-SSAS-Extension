@@ -26,6 +26,7 @@
 > while defining your release. You should enter this once your database has been deployed for the first time. You can specify to not overwrite these settings
 > for a next release.
 > NOTE: the deployment uses the Management Studio executable Microsoft.AnalysisServices.Deployment.exe Make sure that this is installed on your build agent!
+> SECURITY WARNING: if you choose to use Windows username and password as impersonation mode the password you supply will be written in plaintext on disk at the deploy agent!
 
 ## Contribute
 > * Contributions are welcome!
