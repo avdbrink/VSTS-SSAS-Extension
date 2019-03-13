@@ -17,7 +17,7 @@
     "version": {
         "Major": 1,
         "Minor": 0,
-        "Patch": 1
+        "Patch": 2
     },
     "demands": [],
     "minimumAgentVersion": "1.95.0",
@@ -193,9 +193,11 @@
         "AsDBFile0AccessDenied": "Cannot access asdatabase file path: {0}",
         "AsDBFile0": "Asdatabase file path: {0}",
         "CreatingXmlFromAsDatabase": "Creating .xmla file from .asdatabase...",
-        "DeployingDatabase0": "Deploying {0} database ...",
+        "DeployingDatabase0": "Deploying database {0} ...",
+		"ProcessingDatabase0": "Processing the database with processing option {0} ...",
         "Database0DeploySuccess": "{0} database has been deployed successfully",
         "ErrorDuringDeployment":  "Error(s) occurred while deploying database! See above error codes for details",
+        "ErrorDuringProcessing":  "Error(s) occurred while processing database! See above error codes for details",
         "InternalError0": "Task_InternalError {0}",
         "EndingTask": "Ending DeploySSASTask"
     }

@@ -135,7 +135,7 @@ try {
 	$xml = [xml](Get-Content $DeploymentOptions)
 	$xml.Data.Course.Subject
 	$node = $xml.DeploymentOptions
-	$node.ProcessingOption = $ProcessingOption
+	$node.ProcessingOption = "DoNotProcess" # Never use anything else or it will break. Porcessing is handled after deployment 
 	$node.TransactionalDeployment = $TransactionalDeployment
 	$node.PartitionDeployment = $PartitionDeployment
 	$node.RoleDeployment = $RoleDeployment
@@ -253,6 +253,37 @@ try {
 	if ($xml.return.root.Messages.Error) {
 		$xml.return.root.Messages.Error | % { Write-Host ($_.ErrorCode + ": " + $_.Description) }
 		Write-Error (Get-VstsLocString -key ErrorDuringDeployment)
+	}
+	
+	if ($ProcessingOption -ne "DoNotProcess") {
+		Write-Host (Get-VstsLocString -Key ProcessingDatabase0 -ArgumentList $ProcessingOption)
+
+		# Determine the desired processing option and translate to the correct command for the json we're going to generate
+		if ($ProcessingOption -eq "Full") {
+			$type = "full"
+		} else {
+			$type = "automatic"
+		}
+		# Create a JSON  file containing the processing command
+		$fileContent = @"
+{
+  "refresh": {
+    "type": "$type",
+    "objects": [
+      {
+        "database": "$DatabaseName"
+      }
+    ]
+  }
+}
+"@
+		Set-Content -Path $path\processing.json -Value ($fileContent)
+		Invoke-ASCmd -InputFile $path\processing.json -Server $ServerName | Out-File $path\ProcessingResult.xml
+		$xml = [xml](Get-Content $path\ProcessingResult.xml)
+		if ($xml.return.root.Messages.Error) {
+			$xml.return.root.Messages.Error | % { Write-Host ($_.ErrorCode + ": " + $_.Description) }
+			Write-Error (Get-VstsLocString -key ErrorDuringProcessing)
+		}
 	}
 
 } catch {
