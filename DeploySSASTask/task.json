@@ -17,7 +17,7 @@
     "version": {
         "Major": 1,
         "Minor": 0,
-        "Patch": 2
+        "Patch": 4
     },
     "demands": [],
     "minimumAgentVersion": "1.95.0",
@@ -121,13 +121,14 @@
 			"label": "Select an impersonation option",
 			"defaultValue": "UseTheServiceAccount",
 			"options": {
+				"None": "Do not change anything",
 				"UseASpecificWindowsUser": "Use a specfic Windows user and password",
 				"UseTheServiceAccount": "Use the service account",
 				"UseTheCredentialsOfTheCurrentUser": "Use the credentials of the current user",
 				"Inherit": "Inherit"
 			},
 			"required": true,
-			"helpMarkDown":  "Select an impersonation option. Selecting 'Use a specfic Windows user and password' will show input field to specify the username and password",
+			"helpMarkDown":  "Select an impersonation option:\n'Do not change anything' will skip the impersonation of the database.\n'Use a specfic Windows user and password' will show input field to specify the username and password (this is the recommended impersonation)\n'Use the service account' changes the impersonation to use the service account (not recommended)\n'Use the credentials of the current user' uses the credentials of the user connecting to the database (not recommended)",
 			"groupName":  "options"
         },
         {

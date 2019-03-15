@@ -164,77 +164,82 @@ try {
 			break 
 		}
 	}
-	# object structure for multidimensionals is slightly different from tabulars
-	# Datasource of a multidimensional has an ImpersonationInfo object, where tabulars 
-	# can have the impoersonation info written directly to the datasource object
-	if ($server.ServerMode -eq "Multidimensional") {
+	
+	# Impersonation settings should only be  set if ImpersonationInformation <> None
+	# Some users reported problems when deploying impersonation settings, so the option to skip it altogether 
+	if ($ImpersonationInformation -ne "None") {
+		# object structure for multidimensionals is slightly different from tabulars
+		# Datasource of a multidimensional has an ImpersonationInfo object, where tabulars 
+		# can have the impoersonation info written directly to the datasource object
+		if ($server.ServerMode -eq "Multidimensional") {
 
-		# First we find out if it's XML or JSON (SQL Compatability <= 1000 == XML; Compatability >= 1200 == JSON)
-		if ((Test-XMLFile "$AsDBFilePath") -eq "True") {
-			$xml = [xml](Get-Content $AsDBFilePath)
-			$datasources = $xml.Database.DataSources
-			foreach ($datasource in $datasources.ChildNodes) {
-				Write-Host("[XML] Changing impersonation info from " + $datasource.ImpersonationInfo.ImpersonationMode + " to " + $NewImpersonationMode + " on datasource " + $datasource.Name)
-				$datasource.ImpersonationInfo.ImpersonationMode = $NewImpersonationMode
-				if ($NewImpersonationMode -eq "ImpersonateAccount") {
-					$datasource.ImpersonationInfo.Account = $ServiceAccountName
-					$datasource.ImpersonationInfo.Password = $ServiceAccountPassword
+			# First we find out if it's XML or JSON (SQL Compatability <= 1000 == XML; Compatability >= 1200 == JSON)
+			if ((Test-XMLFile "$AsDBFilePath") -eq "True") {
+				$xml = [xml](Get-Content $AsDBFilePath)
+				$datasources = $xml.Database.DataSources
+				foreach ($datasource in $datasources.ChildNodes) {
+					Write-Host("[XML] Changing impersonation info from " + $datasource.ImpersonationInfo.ImpersonationMode + " to " + $NewImpersonationMode + " on datasource " + $datasource.Name)
+					$datasource.ImpersonationInfo.ImpersonationMode = $NewImpersonationMode
+					if ($NewImpersonationMode -eq "ImpersonateAccount") {
+						$datasource.ImpersonationInfo.Account = $ServiceAccountName
+						$datasource.ImpersonationInfo.Password = $ServiceAccountPassword
+					}
 				}
-			}
-			$xml.Save($AsDBFilePath)
-		} else {
-			# Assume it's JSON if Test-XMLFile returned false
-			$model = [IO.File]::ReadAllText($AsDBFilePath)
-			$db = [Microsoft.AnalysisServices.Tabular.JsonSerializer]::DeserializeDatabase($model)
-			foreach ($datasource in $db.Model.Model.DataSources) {
-				Write-Host("[JSON] Changing impersonation info from " + $datasource.ImpersonationInfo.ImpersonationMode + " to " + $NewImpersonationMode + " on datasource " + $datasource.Name)
-				$datasource.ImpersonationInfo.ImpersonationMode = $NewImpersonationMode
-				if ($NewImpersonationMode -eq "ImpersonateAccount") {
-					$datasource.ImpersonationInfo.Account = $ServiceAccountName
-					$datasource.ImpersonationInfo.Password = $ServiceAccountPassword
-				} else {
-					$datasource.ImpersonationInfo.Account = ""
-					$datasource.ImpersonationInfo.Password = ""
+				$xml.Save($AsDBFilePath)
+			} else {
+				# Assume it's JSON if Test-XMLFile returned false
+				$model = [IO.File]::ReadAllText($AsDBFilePath)
+				$db = [Microsoft.AnalysisServices.Tabular.JsonSerializer]::DeserializeDatabase($model)
+				foreach ($datasource in $db.Model.Model.DataSources) {
+					Write-Host("[JSON] Changing impersonation info from " + $datasource.ImpersonationInfo.ImpersonationMode + " to " + $NewImpersonationMode + " on datasource " + $datasource.Name)
+					$datasource.ImpersonationInfo.ImpersonationMode = $NewImpersonationMode
+					if ($NewImpersonationMode -eq "ImpersonateAccount") {
+						$datasource.ImpersonationInfo.Account = $ServiceAccountName
+						$datasource.ImpersonationInfo.Password = $ServiceAccountPassword
+					} else {
+						$datasource.ImpersonationInfo.Account = ""
+						$datasource.ImpersonationInfo.Password = ""
+					}
 				}
+				[Microsoft.AnalysisServices.Tabular.JsonSerializer]::SerializeDatabase($db) | Set-Content $AsDBFilePath
 			}
-			[Microsoft.AnalysisServices.Tabular.JsonSerializer]::SerializeDatabase($db) | Set-Content $AsDBFilePath
+			write-host "Impersonation information is changed on the Multidimensional Server"
 		}
-		write-host "Impersonation information is changed on the Multidimensional Server"
-	}
-	else {
-	  
-		# First we find out if it's XML or JSON (SQL Compatability <= 1000 == XML; Compatability >= 1200 == JSON)
-		if ((Test-XMLFile "$AsDBFilePath") -eq "True") {
-			$xml = [xml](Get-Content $AsDBFilePath)
-			$datasources = $xml.Database.DataSources
-			foreach ($datasource in $datasources.ChildNodes) {
-				Write-Host("[XML] Changing impersonation info from " + $datasource.ImpersonationMode + " to " + $NewImpersonationMode + " on datasource " + $datasource.Name)
-				$datasource.ImpersonationMode = $NewImpersonationMode
-				if ($NewImpersonationMode -eq "ImpersonateAccount") {
-					$datasource.Account = $ServiceAccountName
-					$datasource.Password = $ServiceAccountPassword
+		else {
+		  
+			# First we find out if it's XML or JSON (SQL Compatability <= 1000 == XML; Compatability >= 1200 == JSON)
+			if ((Test-XMLFile "$AsDBFilePath") -eq "True") {
+				$xml = [xml](Get-Content $AsDBFilePath)
+				$datasources = $xml.Database.DataSources
+				foreach ($datasource in $datasources.ChildNodes) {
+					Write-Host("[XML] Changing impersonation info from " + $datasource.ImpersonationMode + " to " + $NewImpersonationMode + " on datasource " + $datasource.Name)
+					$datasource.ImpersonationMode = $NewImpersonationMode
+					if ($NewImpersonationMode -eq "ImpersonateAccount") {
+						$datasource.Account = $ServiceAccountName
+						$datasource.Password = $ServiceAccountPassword
+					}
 				}
-			}
-			$xml.Save($AsDBFilePath)
-		} else {
-			# Assume it's JSON if Test-XMLFile returned false
-			$model = [IO.File]::ReadAllText($AsDBFilePath)
-			$db = [Microsoft.AnalysisServices.Tabular.JsonSerializer]::DeserializeDatabase($model)
-			foreach ($datasource in $db.Model.Model.DataSources) {
-				Write-Host("[JSON] Changing impersonation info from " + $datasource.ImpersonationMode + " to " + $NewImpersonationMode + " on datasource " + $datasource.Name)
-				$datasource.ImpersonationMode = $NewImpersonationMode
-				if ($NewImpersonationMode -eq "ImpersonateAccount") {
-					$datasource.Account = $ServiceAccountName
-					$datasource.Password = $ServiceAccountPassword
-				} else {
-					$datasource.Account = ""
-					$datasource.Password = ""
+				$xml.Save($AsDBFilePath)
+			} else {
+				# Assume it's JSON if Test-XMLFile returned false
+				$model = [IO.File]::ReadAllText($AsDBFilePath)
+				$db = [Microsoft.AnalysisServices.Tabular.JsonSerializer]::DeserializeDatabase($model)
+				foreach ($datasource in $db.Model.Model.DataSources) {
+					Write-Host("[JSON] Changing impersonation info from " + $datasource.ImpersonationMode + " to " + $NewImpersonationMode + " on datasource " + $datasource.Name)
+					$datasource.ImpersonationMode = $NewImpersonationMode
+					if ($NewImpersonationMode -eq "ImpersonateAccount") {
+						$datasource.Account = $ServiceAccountName
+						$datasource.Password = $ServiceAccountPassword
+					} else {
+						$datasource.Account = ""
+						$datasource.Password = ""
+					}
 				}
+				[Microsoft.AnalysisServices.Tabular.JsonSerializer]::SerializeDatabase($db) | Set-Content $AsDBFilePath
 			}
-			[Microsoft.AnalysisServices.Tabular.JsonSerializer]::SerializeDatabase($db) | Set-Content $AsDBFilePath
-		}
-		write-host "Impersonation information is changed on the Tabular server"
+			write-host "Impersonation information is changed on the Tabular server"
 
+		}
 	}
 	# End Edit impersonation settings
 	

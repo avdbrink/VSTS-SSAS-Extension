@@ -38,6 +38,7 @@
 > * Added options for Writeback table options
 > * Added documentation
 > * Upated to use fit in Azure piplines category
+> * Added ImpersonationInformation option None, to skip impersonation settings altogether
 
 ## TODO:
 > * a Lot!
