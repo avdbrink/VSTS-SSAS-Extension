@@ -8,7 +8,7 @@ Install the tfx-cli package: npm i -g tfx-cli
 
 To build the vsix package use the instruction: 
 
-	tfx extension create --manifest-globs vss-extension.json
+	npm run package
 
 Before building from source you need to upgrade the version number in all json files. (vss-extension.json & <tasks>\task.json).
 Not updating the version number will cuase VSTS agent to ignore your new component and not auto update
