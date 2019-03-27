@@ -26,6 +26,8 @@
 > while defining your release. You should enter this once your database has been deployed for the first time. You can specify to not overwrite these settings
 > for a next release.
 > NOTE: the deployment uses the Management Studio executable Microsoft.AnalysisServices.Deployment.exe Make sure that this is installed on your build agent!
+> Currently the Microsoft Hosted Agents DO NOT have Management Studio installed, so deployement from these hosts is unsupported. Setup a self hosted agent with SQL
+> Server Managenment Studio installed on it to use the deployment component
 > SECURITY WARNING: if you choose to use Windows username and password as impersonation mode the password you supply will be written in plaintext on disk at the deploy agent!
 
 ## Contribute
@@ -39,6 +41,7 @@
 > * Added documentation
 > * Upated to use fit in Azure piplines category
 > * Added ImpersonationInformation option None, to skip impersonation settings altogether
+> * Custom Management Studio location (Microsoft.AnalysisServices.Deployment.exe) for deployment component
 
 ## TODO:
 > * a Lot!

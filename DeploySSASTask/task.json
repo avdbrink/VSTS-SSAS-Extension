@@ -17,7 +17,7 @@
     "version": {
         "Major": 1,
         "Minor": 0,
-        "Patch": 4
+        "Patch": 6
     },
     "demands": [],
     "minimumAgentVersion": "1.95.0",
@@ -175,11 +175,21 @@
 			  "2012": "2012",
 			  "2014": "2014",
 			  "2016": "2016",
-			  "2017": "2017"
+              "2017": "2017",
+              "custom": "Custom deployment wizard location"
+            },
+            "helpMarkDown": "Select Management Studio version on TFS Agent machines. Appropriate version of SQL Management Studio must be installed on agent! ",
+            "groupName": "options"
         },
-        "helpMarkDown": "Select Management Studio version on TFS Agent machines. Appropriate version of SQL Management Studio must be installed on agent! ",
-        "groupName": "options"
-      }
+        {
+            "name": "customMGMTVersion",
+            "type": "string",
+            "label": "Custom Analysis Services Deployment executable path",
+            "defaultValue": "C:\\Program Files (x86)\\Microsoft SQL Server\\140\\Tools\\Binn\\ManagementStudio\\Microsoft.AnalysisServices.Deployment.exe",
+			"visibleRule": "mgmtVersion=custom",
+            "required": true,
+			"groupName": "options"
+        }
     ],
     "instanceNameFormat": "Deploy SSAS $(DatabaseName)",
     "execution": {
@@ -200,6 +210,8 @@
         "ErrorDuringDeployment":  "Error(s) occurred while deploying database! See above error codes for details",
         "ErrorDuringProcessing":  "Error(s) occurred while processing database! See above error codes for details",
         "InternalError0": "Task_InternalError {0}",
-        "EndingTask": "Ending DeploySSASTask"
+        "EndingTask": "Ending DeploySSASTask",
+        "CompilerNotFound": "No compiler could be found! Do you have SQL Server Management Studio installed on your agent?",
+        "DeploymentExecutable0": "Deployment executable version: {0}"
     }
 }

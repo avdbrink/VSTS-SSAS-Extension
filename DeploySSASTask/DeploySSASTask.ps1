@@ -53,6 +53,7 @@ try {
 	$OptimizationSettingsDeployment = Get-VstsInput -Name OptimizationSettingsDeployment -Require
 	$WriteBackTableCreation = Get-VstsInput -Name WriteBackTableCreation -Require
 	$mgmtVersion = Get-VstsInput -Name mgmtVersion -Require
+	$customMGMTVersion = Get-VstsInput -Name customMGMTVersion
 	$ImpersonationInformation = Get-VstsInput -Name ImpersonationInformation -Require
 	$ServiceAccountName = Get-VstsInput -Name ServiceAccountName
 	$ServiceAccountPassword = Get-VstsInput -Name ServiceAccountPassword
@@ -76,21 +77,44 @@ try {
 			if (Test-Path("C:\Program Files (x86)\Microsoft SQL Server\120\Tools\Binn\ManagementStudio\Microsoft.AnalysisServices.Deployment.exe")) { $compiler = "C:\Program Files (x86)\Microsoft SQL Server\120\Tools\Binn\ManagementStudio\Microsoft.AnalysisServices.Deployment.exe"}
 			if (Test-Path("C:\Program Files (x86)\Microsoft SQL Server\110\Tools\Binn\ManagementStudio\Microsoft.AnalysisServices.Deployment.exe")) { $compiler = "C:\Program Files (x86)\Microsoft SQL Server\110\Tools\Binn\ManagementStudio\Microsoft.AnalysisServices.Deployment.exe"}
 		}
+		"custom" {
+			if (Test-Path($customMGMTVersion)) { 
+				if ($customMGMTVersion.EndsWith(".exe","CurrentCultureIgnoreCase")) {
+					$compiler = $customMGMTVersion
+				} else {
+					if (!$customMGMTVersion.EndsWith('\')) {
+						$customMGMTVersion = $customMGMTVersion + '\'
+					}
+					$compiler = $customMGMTVersion + "Microsoft.AnalysisServices.Deployment.exe"
+				}
+			}
+		}
 	}
-	if (!(Test-Path($compiler))) {
-		Write-Host "##vso[task.logissue type=error;]Cannot access compiler. Selected version: $mgmtVersion"
-	} else {
-    	Write-Host ("Deployment executable version: $compiler")
+	try {
+		if (!(Test-Path($compiler))) {
+			if ($mgmtVersion -eq "custom") {
+				Write-Host "##vso[task.logissue type=error;] Cannot access compiler. Selected version: $mgmtVersion : $customMGMTVersion" 
+			} else {
+				Write-Host "##vso[task.logissue type=error;] Cannot access compiler. Selected version: $mgmtVersion"
+			}
+			Exit 1
+		} else {
+    	Write-Host (Get-VstsLocString -key DeploymentExecutable0 -ArgumentList $compiler)
     }
+	}
+	catch {
+		Write-Error (Get-VstsLocString -key CompilerNotFound)
+		Exit 1
+	}
 
-    if (Get-Module -ListAvailable -Name SqlServer) {
-       if (-not (Get-Module -Name "SqlServer")) {
-            # if module is not loaded
-            Import-Module "SqlServer" -DisableNameChecking
-        }
-    } else {
-        Write-Host "##vso[task.logissue type=error;]SqlServer Powershell module not installed"
+  if (Get-Module -ListAvailable -Name SqlServer) {
+		if (-not (Get-Module -Name "SqlServer")) {
+      # if module is not loaded
+      Import-Module "SqlServer" -DisableNameChecking
     }
+  } else {
+    Write-Host "##vso[task.logissue type=error;]SqlServer Powershell module not installed"
+  }
 
 	if([System.Convert]::ToBoolean($ConfigurationSettingsDeployment)) {		
 		$ConfigurationSettingsDeployment = "Retain"
