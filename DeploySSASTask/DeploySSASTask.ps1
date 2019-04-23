@@ -225,7 +225,7 @@ try {
 						$datasource.ImpersonationInfo.Password = ""
 					}
 				}
-				[Microsoft.AnalysisServices.Tabular.JsonSerializer]::SerializeDatabase($db) | Set-Content $AsDBFilePath
+				[Microsoft.AnalysisServices.Tabular.JsonSerializer]::SerializeDatabase($db) | Set-Content $AsDBFilePath -Encoding UTF8
 			}
 			write-host "Impersonation information is changed on the Multidimensional Server"
 		}
@@ -259,7 +259,7 @@ try {
 						$datasource.Password = ""
 					}
 				}
-				[Microsoft.AnalysisServices.Tabular.JsonSerializer]::SerializeDatabase($db) | Set-Content $AsDBFilePath
+				[Microsoft.AnalysisServices.Tabular.JsonSerializer]::SerializeDatabase($db) | Set-Content $AsDBFilePath -Encoding UTF8
 			}
 			write-host "Impersonation information is changed on the Tabular server"
 
