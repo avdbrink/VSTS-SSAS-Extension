@@ -42,7 +42,7 @@ if(!(Test-Path $projPath))
 }
 
 Write-Host ("Building project")
-$ArgumentList = "$projPath /build"
+$ArgumentList = "`"$projPath`" /build"
 try {
     Start-Process $devenv $ArgumentList -NoNewWindow -PassThru -Wait -Verbose -RedirectStandardError $true
 } catch {
